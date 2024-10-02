@@ -1,0 +1,6 @@
+const express = require('express')
+const User = require('../model/User')
+const router = express()
+const {signUpValidation,loginValidation} = require('../validations/valid')
+const bcryptjs = require('bcryptjs')
+const jsonwebtoken = require('jsonwebtoken')
