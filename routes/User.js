@@ -40,17 +40,17 @@ router.post('/login',async(req,res)=>{
         console.log({message:error['details'][0]['message']})
         return res.status(400).send({message:error['details'][0]['message']}) 
     }
-    const userCheck = await User.findOne({
-        $or:[{username:req.body.username},{email:req.body.email}]
-    })
+    
 
-    if(!userCheck){
+    const userNameCheck = await User.findOne({username:req.body.username})
+    if(!userNameCheck){
         return res.status(400).send({message:'Account does not exist'})
     }
-    const passwordCheck  = await bcryptjs.compare(req.body.password,userCheck.password)
+    const passwordCheck  = await bcryptjs.compare(req.body.password,userNameCheck.password)
     if(!passwordCheck){
         return res.status(400).send({message:'Incorrect password'})
     }
     const accessToken = jsonwebtoken.sign({_id:userNameCheck._id},process.env.TOKEN, { expiresIn: '1h' })
     res.header('auth-token',accessToken).send({ 'auth-token': accessToken })
 })
+module.exports = router

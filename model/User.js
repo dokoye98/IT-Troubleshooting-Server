@@ -31,7 +31,14 @@ const UserSchema = mongoose.Schema({
         required:true,
         min:6,
         max:1056
+    },
+    answeredquestions:{
+        type:[String],
+        default:[]
     }
+},
+{
+    versionKey:false
 }
 )
 
