@@ -1,7 +1,8 @@
 
-function topicCheck(topic){
-    const currentTopics = ["networking","troubleshooting","hardware"]
+function difficulty(topic){
+    const currentTopics = ["easy","hard"]
     if (!topic || typeof topic !== 'string') {
+        console.log(topic)
         return null
     }
     let formattedTopics = topic.toLowerCase()
@@ -12,4 +13,4 @@ function topicCheck(topic){
     }
 }
 
-module.exports = topicCheck
+module.exports = difficulty

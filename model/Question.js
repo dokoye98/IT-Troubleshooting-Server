@@ -16,7 +16,17 @@ const questionSchema = mongoose.Schema({
   scenarioId: {
     type: String,  
     required: true
+  },
+  difficulty:{
+    type:String,
+    required:true
+  },
+  hint:{
+    type:String,
+    required:true
   }
+},{
+  versionKey:false
 })
 
 module.exports = mongoose.model('Question', questionSchema)
