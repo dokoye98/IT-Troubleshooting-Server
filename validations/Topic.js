@@ -1,6 +1,6 @@
 
 function topicCheck(topic){
-    const currentTopics = ["networking","troubleshooting","hardware"]
+    const currentTopics = ["networking","troubleshooting","hardware","general"]
     if (!topic || typeof topic !== 'string') {
         return null
     }

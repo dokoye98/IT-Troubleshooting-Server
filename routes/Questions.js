@@ -2,7 +2,7 @@ const express = require('express')
 const router = express()
 const Quest = require('../model/Question.js')
 const User = require('../model/User.js')
-const val = require('../TokenGen')
+const validateToken = require('../TokenGen')
 const topicCheck =  require('../validations/Topic')
 const setting = require('../validations/Difficult.js')
 
@@ -32,8 +32,10 @@ router.post('/add-question',async(req,res)=>{
     }
 })
 
-router.post('/submit-answer',val,async(req,res)=>{
+router.post('/submit-answer',validateToken,async(req,res)=>{
     try{
+        const user = await User.findById(req.user._id)
+        console.log(user.username)
         const {questionId,selectedAnswer} = req.body
 
         const question = await Quest.findById(questionId)
@@ -41,11 +43,8 @@ router.post('/submit-answer',val,async(req,res)=>{
             return res.status(404).send({message:'Question not found'})
         }
         const isCorrect = question.correctAnswer === selectedAnswer
-        const user = await User.findById(req.user._id)
-        if (!user.answeredQuestions.includes(questionId)) {
-            user.answeredQuestions.push(questionId)
-            await user.save()
-        }
+        
+        
         res.status(200).send({
             success: isCorrect,
             message: isCorrect ? 'Correct answer!' : `Wrong answer. The correct answer is ${question.correctAnswer}`
@@ -56,25 +55,42 @@ router.post('/submit-answer',val,async(req,res)=>{
 })
 
 
-router.get('/:scenarioId/:difficulty',val,(async(req,res)=>{
-    try{
-        const {numQuestions} = req.query
-        const user = await User.findById(req.user._id)
 
-        const unansweredQuestions = await Quest.find({
-            scenarioId: req.params.scenarioId,
-            difficulty: req.params.difficulty,
-            _id: { $nin: user.answeredQuestions } 
-        })
+router.get('/:scenarioId/:difficulty/:numOfQuestions',validateToken,async(req,res)=>{
 
-        if (unansweredQuestions.length === 0) {
-            return res.status(404).send({ message: 'No unanswered questions found for this scenario and difficulty level' })
-        }
-        const limitedQuestions = unansweredQuestions.slice(0, Math.min(unansweredQuestions.length, numQuestions))
-        res.status(200).json(limitedQuestions)
-    
-    }catch(error){
-        res.status(500).send({ message: 'Error fetching questions', error })
+    const topic = req.params.scenarioId
+    const difficulty = req.params.difficulty
+    const numOfQuestions = parseInt(req.params.numOfQuestions)
+    console.log(typeof numOfQuestions)
+   try{
+    const user = await User.findById(req.user._id)
+    console.log(user.username)
+    const topicQuestion = await Quest.find({scenarioId:topic})
+    if (!topicQuestion || topicQuestion.length === 0) {
+        console.log('check1')
+        return res.status(404).send({ message: 'No questions for this topic' });
     }
-}))
+    
+    const topicDifficulty = topicQuestion.filter(q => q.difficulty === difficulty)
+    
+    if (!topicDifficulty || topicDifficulty.length === 0) {
+        console.log('check2')
+        return res.status(404).send({ message: 'No questions for this difficulty' });
+    }
+    const limitedQuestions = topicDifficulty.slice(0, Math.min(topicDifficulty.length, numOfQuestions));
+        
+        if (limitedQuestions.length === 0) {
+            
+            return res.status(404).send({ message: 'No questions available after slicing' })
+        }
+
+        console.log('check4');
+        res.status(200).json(limitedQuestions);
+    
+}catch(error){
+    console.log(error)
+    res.status(500).send({message:error.message})
+}
+}
+)
 module.exports = router

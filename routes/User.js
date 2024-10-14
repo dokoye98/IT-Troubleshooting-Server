@@ -50,7 +50,11 @@ router.post('/login',async(req,res)=>{
     if(!passwordCheck){
         return res.status(400).send({message:'Incorrect password'})
     }
-    const accessToken = jsonwebtoken.sign({_id:userNameCheck._id},process.env.TOKEN, { expiresIn: '1h' })
-    res.header('auth-token',accessToken).send({ 'auth-token': accessToken })
+    const accessToken = jsonwebtoken.sign({_id:userNameCheck._id},process.env.TOKEN_KEY, { expiresIn: '5h' })
+    res.header('Authorization', `Bearer ${accessToken}`).send({ 'auth-token': accessToken })
+    console.log('User has signed in', userNameCheck.username )
 })
+
+
+
 module.exports = router

@@ -14,7 +14,7 @@ const questionPort = require('./routes/Questions')
 const commentPort = require('./routes/Comments')
 app.use('/users', userPort)
 app.use('/question', questionPort)
-app.use('/comment',commentPort)
+app.use('/comments',commentPort)
 
 mongoose.connect(process.env.DB_CONNECTOR)
   .then(() => console.log('DB connected'))
