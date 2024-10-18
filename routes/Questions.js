@@ -85,6 +85,7 @@ router.post('/submit-answer',validateToken,async(req,res)=>{
         const isCorrect = question.correctAnswer === selectedAnswer
         if(isCorrect){
             user.LevelPoints += 1
+            user.answeredquestions.push(questionId)
             console.log(user.LevelPoints)
         }
         if (!user.answeredquestions.includes(questionId)) {

@@ -56,17 +56,31 @@ router.post('/login',async(req,res)=>{
     console.log('User has signed in', userNameCheck.username )
 })
 
-router.get('/account',validationToken,async(req,res)=>{
+router.get('/account', validationToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('answeredquestions')
 
-    
-    try{
-        const user = await User.findById(req.user._id)
-        
-        return res.status(200).send({User:user})
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' })
+        }
 
-    }catch(error){
-        return res.status(500).send({message:error.message})
+        const groupedQuestions = user.answeredquestions.reduce((acc, question) => {
+            const { scenarioId } = question
+            if (!acc[scenarioId]) {
+                acc[scenarioId] = []
+            }
+            acc[scenarioId].push(question)
+            return acc
+        }, {})
+
+        return res.status(200).send({
+            User: user,
+            answeredQuestions: groupedQuestions
+        })
+    } catch (error) {
+        return res.status(500).send({ message: error.message })
     }
 })
+
 
 module.exports = router
