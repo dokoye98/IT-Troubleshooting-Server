@@ -37,7 +37,8 @@ const UserSchema = mongoose.Schema({
         ref: 'Question',
         default: []
     }, LevelPoints: {
-        type: Number
+        type: Number,
+        default: 0
     },
 },
 {

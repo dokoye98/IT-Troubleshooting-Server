@@ -83,14 +83,15 @@ router.post('/submit-answer',validateToken,async(req,res)=>{
             return res.status(404).send({message:'Question not found'})
         }
         const isCorrect = question.correctAnswer === selectedAnswer
-        if(isCorrect){
+        if (isCorrect) {
             user.LevelPoints += 1
-            user.answeredquestions.push(questionId)
+            if (!user.answeredquestions.includes(questionId)) {
+                user.answeredquestions.push(questionId)
+            }
+            await user.save()
             console.log(user.LevelPoints)
         }
-        if (!user.answeredquestions.includes(questionId)) {
-            user.answeredquestions.push(questionId)
-        }
+        
         res.status(200).send({
             success: isCorrect,
             message: isCorrect ? 'Correct answer!' : `Wrong answer. The correct answer is ${question.correctAnswer}`
@@ -131,5 +132,28 @@ router.get('/:scenarioId/:difficulty/:numOfQuestions',validateToken,async(req,re
         res.status(500).send({message:error.message})
     }
 })
+
+
+router.patch('/reset-account', validateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' })
+        }
+
+        
+        user.LevelPoints = 0
+        user.answeredquestions = []
+
+        
+        await user.save()
+
+        return res.status(200).send({ message: 'Account reset successfully' })
+    } catch (error) {
+        return res.status(500).send({ message: error.message })
+    }
+})
+
 
 module.exports = router
