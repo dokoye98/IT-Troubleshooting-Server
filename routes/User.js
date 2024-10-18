@@ -4,6 +4,7 @@ const router = express()
 const {signUpValidation,loginValidation} = require('../validations/valid')
 const bcryptjs = require('bcryptjs')
 const jsonwebtoken = require('jsonwebtoken')
+const validationToken = require('../TokenGen')
 
 router.post('/signup',async(req,res)=>{
     const {error} = signUpValidation(req.body)
@@ -55,6 +56,17 @@ router.post('/login',async(req,res)=>{
     console.log('User has signed in', userNameCheck.username )
 })
 
+router.get('/account',validationToken,async(req,res)=>{
 
+    
+    try{
+        const user = await User.findById(req.user._id)
+        
+        return res.status(200).send({User:user})
+
+    }catch(error){
+        return res.status(500).send({message:error.message})
+    }
+})
 
 module.exports = router

@@ -8,11 +8,13 @@ const User = require('../model/User')
 
 router.post('/:topic/add-comment',val,async(req,res)=>{
     try{
+
         const comment = req.body.comment
         const topic = req.params.topic
-        const formattedTopics = Topic(topic.slice(1))
+        console.log(topic)
+        const formattedTopics = Topic(topic)
        
-
+        console.log('check 2')
         const newComment = new Comment({
             comment: comment,
             userId: req.user._id,
@@ -24,6 +26,7 @@ router.post('/:topic/add-comment',val,async(req,res)=>{
         res.status(500).send({ message: 'Error adding comment', error })
     }
 })
+
 
 router.post('/:commentId/downvote', val, async (req, res) => {
     try {
@@ -105,7 +108,7 @@ router.post('/:commentId/reply/:parentReplyId?',val,async(req,res)=>{
             userId:req.user._id,
             reply:reply
         })
-        
+            console.log(`${commentId} this is the id`)
         const savedReply = await newReply.save()
        
         res.status(200).send({ message: 'Reply added', savedReply })
@@ -115,10 +118,11 @@ router.post('/:commentId/reply/:parentReplyId?',val,async(req,res)=>{
 })
 
 router.get('/:topic/comment', async (req, res) => {
-   
+   console.log('check 1')
     try {
         const topic = req.params.topic
         let formattedTopics = Topic(topic)
+        console.log(topic)
         
         const comments = await Comment.find({topic})
         
@@ -139,7 +143,7 @@ router.get('/:commentId/replies',async(req,res)=>{
         if (!replies || replies.length === 0) {
             return res.status(404).send({ message: 'No replies found for this comment' })
         }
-        //console.log(replies)
+        
         const user = await User.find({userId:replies.userId})
         //console.log(user)
         for(let i = 0; i < user.length; i++){

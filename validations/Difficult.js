@@ -1,6 +1,6 @@
 
 function difficulty(topic){
-    const currentTopics = ["easy","hard"]
+    const currentTopics = ["easy","hard","medium"]
     if (!topic || typeof topic !== 'string') {
         console.log(topic)
         return null

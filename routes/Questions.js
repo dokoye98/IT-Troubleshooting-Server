@@ -32,6 +32,60 @@ router.post('/add-question',async(req,res)=>{
     }
 })
 
+router.post('/add-questions', async (req, res) => {
+    const { questions } = req.body; 
+
+    if (!Array.isArray(questions)) {
+        return res.status(400).send({ message: 'Invalid data format, expected an array of questions.' });
+    }
+
+    const validQuestions = [];
+    const invalidQuestions = [];
+
+    for (const questionData of questions) {
+        const { question, options, correctAnswer, scenarioId, difficulty, hint } = questionData;
+        
+        const validTopic = topicCheck(scenarioId);
+        if (!validTopic) {
+            invalidQuestions.push({ question, message: 'Invalid Topic' });
+            continue; 
+        }
+
+        const validSetting = setting(difficulty);
+        if (!validSetting) {
+            invalidQuestions.push({ question, message: 'Invalid Setting' });
+            continue; 
+        }
+
+        const newQuestion = new Quest({
+            question: question,
+            options: options,
+            correctAnswer: correctAnswer,
+            scenarioId: validTopic,
+            difficulty: validSetting,
+            hint: hint
+        });
+
+        try {
+            const savedQuestion = await newQuestion.save();
+            validQuestions.push(savedQuestion);
+        } catch (error) {
+            invalidQuestions.push({ question, message: 'Error saving question', error });
+        }
+    }
+
+    if (invalidQuestions.length > 0) {
+        return res.status(207).send({ 
+            message: 'Some questions could not be added.', 
+            validQuestions, 
+            invalidQuestions 
+        });
+    }
+    console.log(`Finished here with ${validQuestions.length} questions`)
+    res.status(200).send({ message: 'All questions have been added successfully.', validQuestions });
+});
+
+
 router.post('/submit-answer',validateToken,async(req,res)=>{
     try{
         const user = await User.findById(req.user._id)
@@ -43,8 +97,14 @@ router.post('/submit-answer',validateToken,async(req,res)=>{
             return res.status(404).send({message:'Question not found'})
         }
         const isCorrect = question.correctAnswer === selectedAnswer
-        
-        
+        if(isCorrect){
+            user.LevelPoints += 1
+            console.log(user.LevelPoints)
+        }
+
+         if (!user.answeredQuestions.includes(questionId)) {
+            user.answeredQuestions.push(questionId);
+        }
         res.status(200).send({
             success: isCorrect,
             message: isCorrect ? 'Correct answer!' : `Wrong answer. The correct answer is ${question.correctAnswer}`
@@ -67,14 +127,17 @@ router.get('/:scenarioId/:difficulty/:numOfQuestions',validateToken,async(req,re
     console.log(user.username)
     const topicQuestion = await Quest.find({scenarioId:topic})
     if (!topicQuestion || topicQuestion.length === 0) {
-        console.log('check1')
+        
         return res.status(404).send({ message: 'No questions for this topic' });
     }
     
-    const topicDifficulty = topicQuestion.filter(q => q.difficulty === difficulty)
+    const topicDifficulty = topicQuestion.filter(q => q.difficulty === difficulty
+        && !user.answeredQuestions.includes(q._id)
+    )
+    
     
     if (!topicDifficulty || topicDifficulty.length === 0) {
-        console.log('check2')
+        
         return res.status(404).send({ message: 'No questions for this difficulty' });
     }
     const limitedQuestions = topicDifficulty.slice(0, Math.min(topicDifficulty.length, numOfQuestions));

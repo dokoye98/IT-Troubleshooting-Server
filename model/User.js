@@ -33,9 +33,13 @@ const UserSchema = mongoose.Schema({
         max:1056
     },
     answeredquestions:{
-        type:[String],
-        default:[]
-    }
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Question',
+        default: []
+    }, LevelPoints: {
+        type: Number,
+        default: 0
+    },
 },
 {
     versionKey:false
