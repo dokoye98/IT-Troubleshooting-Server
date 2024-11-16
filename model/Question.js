@@ -1,34 +1,32 @@
-const mongoose = require('mongoose')
-
+const mongoose = require('mongoose');
 const questionSchema = mongoose.Schema({
   question: {
     type: String,
     required: true
   },
   options: {
-    type: [String],  
+    type: [String],
     required: true
   },
   correctAnswer: {
     type: String,
     required: true
   },
-  scenarioId: {
-    type: String,  
+  topic: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Topic',
     required: true
   },
-  difficulty:{
-    type:String,
-    required:true
+  difficulty: {
+    type: String,
+    required: true
   },
-  hint:{
-    type:String,
-    required:true
+  hint: {
+    type: String,
+    required: true
   }
-},{
-  versionKey:false
-})
+}, {
+  versionKey: false
+});
 
-module.exports = mongoose.model('Question', questionSchema)
-
-
+module.exports = mongoose.model('Question', questionSchema);
