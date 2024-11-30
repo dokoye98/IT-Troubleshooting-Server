@@ -58,25 +58,50 @@ router.post('/login',async(req,res)=>{
 
 router.get('/account', validationToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('answeredquestions')
-
+        const user = await User.findById(req.user._id).populate({
+            path: 'answeredquestions',
+            populate: {
+                path: 'topic',
+                select: 'name' 
+            }
+        })
+        console.log()
         if (!user) {
             return res.status(404).send({ message: 'User not found' })
         }
 
         const groupedQuestions = user.answeredquestions.reduce((acc, question) => {
-            const { scenarioId } = question
-            if (!acc[scenarioId]) {
-                acc[scenarioId] = []
+            const topicName = question.topic.name; 
+            if (!acc[topicName]) {
+                acc[topicName] = [];
             }
-            acc[scenarioId].push(question)
-            return acc
-        }, {})
+            acc[topicName].push(question);
+            return acc;
+        }, {});
 
         return res.status(200).send({
             User: user,
             answeredQuestions: groupedQuestions
         })
+    } catch (error) {
+        return res.status(500).send({ message: error.message })
+    }
+})
+
+router.patch('/reset-account', validationToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' })
+        }
+
+        user.LevelPoints = 0
+        user.answeredquestions = []
+
+        await user.save()
+
+        return res.status(200).send({ message: 'Account reset successfully' })
     } catch (error) {
         return res.status(500).send({ message: error.message })
     }

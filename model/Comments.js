@@ -10,10 +10,6 @@ const commentSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    topic: {
-      type:String,
-      required:true
-    },
     upvotes: {
         type: Number,
         default: 0

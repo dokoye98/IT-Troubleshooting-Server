@@ -7,6 +7,7 @@ const User = require('../model/User.js')
 const validateToken = require('../TokenGen')
 const topicCheck = require('../validations/Topic')
 const setting = require('../validations/Difficult.js')
+const Data  = require('../model/QuestionData.js')
 
 
 
@@ -92,6 +93,7 @@ router.post('/add-questions', async (req, res) => {
 
             const savedQuestion = await newQuestion.save()
             validTopic.questions.push(savedQuestion._id)
+            
             await validTopic.save()
             validQuestions.push(savedQuestion)
         } catch (error) {
@@ -102,7 +104,7 @@ router.post('/add-questions', async (req, res) => {
     if (invalidQuestions.length > 0) {
         return res.status(207).send({ message: 'Some questions could not be added', validQuestions, invalidQuestions })
     }
-
+    console.log(validQuestions.length)
     res.status(200).send({ message: 'All questions have been added successfully', validQuestions })
 })
 
@@ -160,6 +162,23 @@ router.get('/:topicId/:difficulty/:numOfQuestions', validateToken, async (req, r
             return res.status(404).send({ message: 'No questions available after slicing' })
         }
 
+        let subject = await  Topic.findOne({ _id: topicId })
+        if(!subject){
+            return res.status(404).send({message:"Invalid subject cannot proceed"})
+        }
+        const topicName = subject.name
+
+        
+        const questionData = await Data.findOneAndUpdate(
+            {topicName },
+            { $inc: { accessCount: 1 } },
+            { upsert: true, new: true }
+        ).catch(err => {
+            console.error('Error during findOneAndUpdate:', err);
+            throw err;
+        })
+        console.log(`Access count for topic ${topicName}:`, questionData.accessCount)
+      
         res.status(200).json(limitedQuestions)
     } catch (error) {
         res.status(500).send({ message: error.message })
