@@ -135,6 +135,71 @@ router.post('/submit-answer', validateToken, async (req, res) => {
         res.status(500).send({ message: 'Error submitting answer', error })
     }
 })
+router.get('/quiz-summary', validateToken, async (req, res) => {
+    console.log('accessed')
+    try {
+        
+        const user = await User.findById(req.user._id).populate('answeredquestions', 'question'); // Populate answered questions
+        const correctAnswers = user.correctQuizQuestions || 0;
+        const totalAnswered = user.answeredquestions.length || 0;
+        const incorrectAnswers = totalAnswered - correctAnswers;
+
+        res.status(200).send({
+            message: 'Quiz completed!',
+            correctAnswers,
+            incorrectAnswers,
+            totalQuestions: totalAnswered
+        });
+
+        // Optionally reset quiz data for the user
+        user.correctQuizQuestions = 0;
+        await user.save();
+    } catch (error) {
+        res.status(500).send({ message: 'Error retrieving quiz summary', error });
+    }
+});
+router.patch('/reset-account', validateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' })
+        }
+
+        user.LevelPoints = 0
+        user.answeredquestions = []
+
+        await user.save()
+
+        return res.status(200).send({ message: 'Account reset successfully' })
+    } catch (error) {
+        return res.status(500).send({ message: error.message })
+    }
+})
+
+router.post('/add-topic', async (req, res) => {
+    const { name, categoryName } = req.body
+
+    try {
+        
+        const category = await Category.findOne({ name: categoryName })
+        if (!category) {
+            return res.status(404).send({ message: 'Category not found' })
+        }
+
+        
+        const newTopic = new Topic({ name, categoryId: category._id })
+        const savedTopic = await newTopic.save()
+
+       
+        category.topics.push(savedTopic._id)
+        await category.save()
+
+        res.status(200).send({ message: 'Topic added successfully', savedTopic })
+    } catch (error) {
+        res.status(500).send({ message: 'Error adding topic', error })
+    }
+})
 
 router.get('/:topicId/:difficulty/:numOfQuestions', validateToken, async (req, res) => {
     const topicId = req.params.topicId
@@ -186,24 +251,7 @@ router.get('/:topicId/:difficulty/:numOfQuestions', validateToken, async (req, r
     }
 })
 
-router.patch('/reset-account', validateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id)
 
-        if (!user) {
-            return res.status(404).send({ message: 'User not found' })
-        }
-
-        user.LevelPoints = 0
-        user.answeredquestions = []
-
-        await user.save()
-
-        return res.status(200).send({ message: 'Account reset successfully' })
-    } catch (error) {
-        return res.status(500).send({ message: error.message })
-    }
-})
 router.get('/:category', async (req, res) => {
     try {
         const { category } = req.params;
@@ -220,29 +268,7 @@ router.get('/:category', async (req, res) => {
 });
 
 
-router.post('/add-topic', async (req, res) => {
-    const { name, categoryName } = req.body
 
-    try {
-        
-        const category = await Category.findOne({ name: categoryName })
-        if (!category) {
-            return res.status(404).send({ message: 'Category not found' })
-        }
-
-        
-        const newTopic = new Topic({ name, categoryId: category._id })
-        const savedTopic = await newTopic.save()
-
-       
-        category.topics.push(savedTopic._id)
-        await category.save()
-
-        res.status(200).send({ message: 'Topic added successfully', savedTopic })
-    } catch (error) {
-        res.status(500).send({ message: 'Error adding topic', error })
-    }
-})
 
 router.get('/',async(req,res)=>{
 
@@ -256,27 +282,7 @@ router.get('/',async(req,res)=>{
     }
 })
 
-router.get('/quiz-summary', validateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).populate('answeredquestions', 'question'); // Populate answered questions
-        const correctAnswers = user.correctQuizQuestions || 0;
-        const totalAnswered = user.answeredquestions.length || 0;
-        const incorrectAnswers = totalAnswered - correctAnswers;
 
-        res.status(200).send({
-            message: 'Quiz completed!',
-            correctAnswers,
-            incorrectAnswers,
-            totalQuestions: totalAnswered
-        });
-
-        // Optionally reset quiz data for the user
-        user.correctQuizQuestions = 0;
-        await user.save();
-    } catch (error) {
-        res.status(500).send({ message: 'Error retrieving quiz summary', error });
-    }
-});
 
 
 
