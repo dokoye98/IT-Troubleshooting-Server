@@ -258,12 +258,16 @@ router.get('/',async(req,res)=>{
 
 router.get('/quiz-summary', validateToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).populate('answeredquestions', 'question'); // Populate answered questions
         const correctAnswers = user.correctQuizQuestions || 0;
+        const totalAnswered = user.answeredquestions.length || 0;
+        const incorrectAnswers = totalAnswered - correctAnswers;
 
         res.status(200).send({
             message: 'Quiz completed!',
             correctAnswers,
+            incorrectAnswers,
+            totalQuestions: totalAnswered
         });
 
         // Optionally reset quiz data for the user
@@ -273,6 +277,7 @@ router.get('/quiz-summary', validateToken, async (req, res) => {
         res.status(500).send({ message: 'Error retrieving quiz summary', error });
     }
 });
+
 
 
 
