@@ -149,19 +149,21 @@ router.get('/:commentId/replies', async (req, res) => {
 
 router.get('/:commentId', async (req, res) => {
     try {
-        console.log('check 1 commentID ')
+        console.log('Fetching comment with ID:', req.params.commentId);
         const { commentId } = req.params;
-        //console.log(commentId)
-        const comment = await Comment.findById(commentId);
+
+        // Find the comment and populate the userId with username
+        const comment = await Comment.findById(commentId).populate('userId', 'username');
         if (!comment) {
             return res.status(404).send({ message: 'Comment not found' });
         }
-       
-        console.log(comment)
+
         res.status(200).send(comment);
     } catch (error) {
+        console.error('Error fetching comment:', error);
         res.status(500).send({ message: 'Error fetching comment', error });
     }
 });
+
 
 module.exports = router
