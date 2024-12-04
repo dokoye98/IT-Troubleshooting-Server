@@ -27,73 +27,69 @@ router.post('/add-comment',val,async(req,res)=>{
 })
 
 
-router.post('/:commentId/downvote', val, async (req, res) => {
+router.post('/vote/:type/:commentId', val, async (req, res) => {
     try {
-        const comment = await Comment.findById(req.params.commentId)
-        if (!comment) {
-            return res.status(404).send({ message: 'Comment not found' })
+        const { type, commentId } = req.params; // Extract type (upvote/downvote) and commentId
+        const userId = req.user._id;
+
+        // Validate type
+        if (!['upvote', 'downvote'].includes(type)) {
+            return res.status(400).send({ message: 'Invalid vote type. Must be "upvote" or "downvote".' });
         }
 
-        
-        if (comment.dislikedBy.includes(req.user._id)) {
-            comment.dislikedBy.pull(req.user._id)
-            comment.downvotes -= 1
-        } else {
-        
-            comment.dislikedBy.push(req.user._id)
-            comment.downvotes += 1
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).send({ message: 'Comment not found' });
+        }
 
-            if (comment.likedBy.includes(req.user._id)) {
-                comment.likedBy.pull(req.user._id)
-                comment.upvotes -= 1
+        // Voting logic
+        if (type === 'upvote') {
+            if (comment.likedBy.includes(userId)) {
+                // Remove upvote
+                comment.likedBy = comment.likedBy.filter((id) => id.toString() !== userId.toString());
+                comment.upvotes -= 1;
+            } else {
+                // Add upvote
+                comment.likedBy.push(userId);
+                comment.upvotes += 1;
+
+                // Remove downvote if exists
+                if (comment.dislikedBy.includes(userId)) {
+                    comment.dislikedBy = comment.dislikedBy.filter((id) => id.toString() !== userId.toString());
+                    comment.downvotes -= 1;
+                }
+            }
+        } else if (type === 'downvote') {
+            if (comment.dislikedBy.includes(userId)) {
+                // Remove downvote
+                comment.dislikedBy = comment.dislikedBy.filter((id) => id.toString() !== userId.toString());
+                comment.downvotes -= 1;
+            } else {
+                // Add downvote
+                comment.dislikedBy.push(userId);
+                comment.downvotes += 1;
+
+                // Remove upvote if exists
+                if (comment.likedBy.includes(userId)) {
+                    comment.likedBy = comment.likedBy.filter((id) => id.toString() !== userId.toString());
+                    comment.upvotes -= 1;
+                }
             }
         }
 
-        await comment.save()
-        console.log('downvote')
+        await comment.save();
+
         res.status(200).send({
-            message: 'Downvote toggled successfully',
+            message: `${type.charAt(0).toUpperCase() + type.slice(1)} toggled successfully.`,
             upvotes: comment.upvotes,
-            downvotes: comment.downvotes
-        })
+            downvotes: comment.downvotes,
+        });
     } catch (error) {
-        res.status(500).send({ message: 'Error toggling downvote', error })
+        console.error(`Error toggling ${req.params.type}:`, error);
+        res.status(500).send({ message: `Error toggling ${req.params.type}`, error });
     }
-})
+});
 
-router.post('/:commentId/upvote', val, async (req, res) => {
-    try {
-        const comment = await Comment.findById(req.params.commentId)
-        if (!comment) {
-            return res.status(404).send({ message: 'Comment not found' })
-        }
-
-        
-        if (comment.likedBy.includes(req.user._id)) {
-            comment.likedBy.pull(req.user._id)
-            comment.upvotes -= 1
-        } else {
-        
-            comment.likedBy.push(req.user._id)
-            comment.upvotes += 1
-
-            if (comment.dislikedBy.includes(req.user._id)) {
-                comment.dislikedBy.pull(req.user._id)
-                comment.downvotes -= 1
-            }
-        }
-
-        await comment.save()
-        console.log('upvote')
-        res.status(200).send({
-            message: 'Upvote toggled successfully',
-            upvotes: comment.upvotes,
-            downvotes: comment.downvotes
-        })
-    } catch (error) {
-        res.status(500).send({ message: 'Error toggling upvote', error })
-    }
-})
 
 
 
