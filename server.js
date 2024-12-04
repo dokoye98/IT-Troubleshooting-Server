@@ -18,6 +18,10 @@ app.use('/question', questionPort)
 app.use('/comments',commentPort)
 app.use('/analytic',dataPort)
 
+app.get('/',async(req,res)=>{
+  res.status(200).send('Hello world')
+})
+
 mongoose.connect(process.env.DB_CONNECTOR)
   .then(() => console.log('DB connected'))
   .catch(err => console.error('DB connection error', err))
