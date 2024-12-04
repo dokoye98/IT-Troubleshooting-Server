@@ -120,6 +120,7 @@ router.post('/submit-answer', validateToken, async (req, res) => {
         const isCorrect = question.correctAnswer === selectedAnswer
         if (isCorrect) {
             user.LevelPoints += 1
+            user.correctQuizQuestions = (user.correctQuizQuestions || 0) + 1;
             if (!user.answeredquestions.includes(questionId)) {
                 user.answeredquestions.push(questionId)
             }
@@ -254,6 +255,24 @@ router.get('/',async(req,res)=>{
         res.status(500).send({Message:err})
     }
 })
+
+router.get('/quiz-summary', validateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        const correctAnswers = user.correctQuizQuestions || 0;
+
+        res.status(200).send({
+            message: 'Quiz completed!',
+            correctAnswers,
+        });
+
+        // Optionally reset quiz data for the user
+        user.correctQuizQuestions = 0;
+        await user.save();
+    } catch (error) {
+        res.status(500).send({ message: 'Error retrieving quiz summary', error });
+    }
+});
 
 
 
