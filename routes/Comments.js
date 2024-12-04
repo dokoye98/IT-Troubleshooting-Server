@@ -152,13 +152,28 @@ router.get('/:commentId', async (req, res) => {
         console.log('Fetching comment with ID:', req.params.commentId);
         const { commentId } = req.params;
 
-        // Find the comment and populate the userId with username
-        const comment = await Comment.findById(commentId).populate('userId', 'username');
+        // Fetch the comment
+        const comment = await Comment.findById(commentId);
         if (!comment) {
             return res.status(404).send({ message: 'Comment not found' });
         }
 
-        res.status(200).send(comment);
+        // Fetch the user associated with the comment
+        const user = await User.findById(comment.userId)
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        // Combine comment and user data
+        const response = {
+            ...comment.toObject(), // Convert Mongoose document to plain object
+            user: {
+                _id: user._id,
+                username: user.username
+            }
+        };
+
+        res.status(200).send(response);
     } catch (error) {
         console.error('Error fetching comment:', error);
         res.status(500).send({ message: 'Error fetching comment', error });
