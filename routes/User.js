@@ -12,10 +12,9 @@ router.post('/signup',async(req,res)=>{
         console.log({message:error['details'][0]['message']})
         return res.status(400).send({message:error['details'][0]['message']}) 
     }
-    const emailCheck = await User.findOne({email:req.body.email})
     const userCheck = await User.findOne({username:req.body.username})
-    if(emailCheck || userCheck){
-        return res.status(400).send({message:'Email or Username is already in use'})
+    if(userCheck){
+        return res.status(400).send({message:' Username is already in use'})
     }
     const salt = await bcryptjs.genSalt(10)
     const hashpassword = await bcryptjs.hash(req.body.password,salt)
@@ -23,7 +22,7 @@ router.post('/signup',async(req,res)=>{
         firstname: req.body.firstname,
         lastname: req.body.lastname,
         username: req.body.username,
-        email: req.body.email,
+       
         password: hashpassword
     })
     try{

@@ -35,16 +35,6 @@ const signUpValidation = (data)=>{
             'string.max': 'Username must be less than 256 characters',
             'any.required': 'Username is required'
         }),
-    email: joi.string()
-        .min(6)
-        .max(256)
-        .email()
-        .required()
-        .messages({
-            'string.email': 'Please provide a valid email address',
-            'string.empty': 'Email is required',
-            'any.required': 'Email is required'
-        }),
     password: joi.string()
         .min(6)
         .max(1056)
