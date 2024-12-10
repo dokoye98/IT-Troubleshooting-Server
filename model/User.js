@@ -38,6 +38,10 @@ const UserSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    QuizQuestions: {
+        type: Number,
+        default: 0
+    }
 },
 {
     versionKey:false

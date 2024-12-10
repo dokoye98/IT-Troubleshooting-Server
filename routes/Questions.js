@@ -118,9 +118,11 @@ router.post('/submit-answer', validateToken, async (req, res) => {
         }
 
         const isCorrect = question.correctAnswer === selectedAnswer
+        user.QuizQuestions = (user.tQuizQuestions || 0) + 1
         if (isCorrect) {
             user.LevelPoints += 1
             user.correctQuizQuestions = (user.correctQuizQuestions || 0) + 1;
+
             if (!user.answeredquestions.includes(questionId)) {
                 user.answeredquestions.push(questionId)
             }
@@ -141,7 +143,7 @@ router.get('/quiz-summary', validateToken, async (req, res) => {
         
         const user = await User.findById(req.user._id).populate('answeredquestions', 'question'); // Populate answered questions
         const correctAnswers = user.correctQuizQuestions || 0;
-        const totalAnswered = user.answeredquestions.length || 0;
+        const totalAnswered = user.QuizQuestions || 0
         const incorrectAnswers = totalAnswered - correctAnswers;
 
         res.status(200).send({
