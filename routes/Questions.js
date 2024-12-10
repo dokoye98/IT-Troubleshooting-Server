@@ -118,7 +118,7 @@ router.post('/submit-answer', validateToken, async (req, res) => {
         }
 
         const isCorrect = question.correctAnswer === selectedAnswer
-        user.QuizQuestions = (user.tQuizQuestions || 0) + 1
+        
         if (isCorrect) {
             user.LevelPoints += 1
             user.correctQuizQuestions = (user.correctQuizQuestions || 0) + 1;
@@ -144,7 +144,7 @@ router.get('/quiz-summary', validateToken, async (req, res) => {
         const user = await User.findById(req.user._id).populate('answeredquestions', 'question'); // Populate answered questions
         const correctAnswers = user.correctQuizQuestions || 0;
         const totalAnswered = user.QuizQuestions || 0
-        const incorrectAnswers = totalAnswered - correctAnswers;
+        const incorrectAnswers = Math.max(0, totalAnswered - correctAnswers)
 
         res.status(200).send({
             message: 'Quiz completed!',
@@ -246,7 +246,8 @@ router.get('/:topicId/:difficulty/:numOfQuestions', validateToken, async (req, r
             throw err;
         })
         console.log(`Access count for topic ${topicName}:`, questionData.accessCount)
-      
+      user.QuizQuestions = numOfQuestions
+      await user.save()
         res.status(200).json(limitedQuestions)
     } catch (error) {
         res.status(500).send({ message: error.message })
